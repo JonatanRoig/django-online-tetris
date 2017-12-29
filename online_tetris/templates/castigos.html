@@ -1,0 +1,16 @@
+
+
+<table>
+	<tr>
+		<th>Castigos</th>
+	</tr>
+
+  	{% for castigo in all_castigos %}
+
+  	<tr {% if castigo.receptor.pk == user_pk %} style="color: red !important;" {% else %} style="color: green !important;" {% endif %}>
+  		<td style="font-size: 12px; font-weight: bold;">{{ castigo.emisor.nombre }} <img style="width: 25px;" src="/static/{% if castigo.receptor.pk == user_pk %}red_arrow_right.png{% else %}arrow_right.ico{% endif %}" /> {{ castigo.receptor.nombre }}</td>
+  	</tr>
+	{% endfor %}
+
+
+</table>

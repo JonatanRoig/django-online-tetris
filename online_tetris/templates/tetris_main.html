@@ -1,0 +1,314 @@
+
+{% load staticfiles %}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta names="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+	<title>Tetris!</title>	
+	
+	
+<script src="{% static 'stroke_text.js'%}"></script>
+
+
+
+<script src="{% static 'tetris.js'%}" type="text/javascript"></script>
+<script type="text/javascript">
+	TETRIS.setScoreIncreasing();
+</script>
+
+
+<link rel="stylesheet" href="{% static 'tetris_style.css'%}" type="text/css">
+
+
+</head>
+
+
+<body>
+
+
+
+	<!-- INPUT PARA INTRODUCIR EL NOMBRE -->
+	<div class="modal fade" id="Popup_nombre" role="dialog">
+		<div class="modal-dialog">
+
+			<!-- Modal content-->
+			<div class="modal-content">
+				<div class="modal-header">
+					
+					<h4 class="modal-title">Introduce un nickname para jugar</h4>
+				</div>
+				<div class="modal-body input_nickname">
+					<label><b>Nickname</b></label>
+					<input id="nickname_input" type="text" name="nickname" />
+				</div>
+				<div class="modal-footer">
+					<button id="crear_sesion" type="button" class="btn btn-success btn-lg">START</button>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	
+	<div id="indicatorcontainer"></div>
+
+	<div class="game">
+		<canvas id="board_canvas" width="274" height="638" style="position:fixed; left:10px; top:10px; z-index:1">
+			Your browser does not support HTML5 Canvas.
+		</canvas>
+		<canvas id="animated_canvas" width="274" height="638" style="position:fixed; left:10px; top:10px; z-index:3"></canvas>
+		<canvas id="shadow_canvas" width="274" height="638" style="position:fixed; left:10px; top:10px; z-index:2"></canvas>
+		<!-- <div id="placeholder" style=""> </div> -->
+	</div>
+
+	
+	
+	<div class="row" style="position: relative; font-family: sans-serif; margin-left: 194px; max-width: 500px;">
+		<h2>Tu sesión</h2><br>
+	  	<p>
+	  		Nombre:<span id="nickname"></span> <br>
+	  		Puntos: <span id="score">0</span> <br>
+	  		Velocidad: <span id="speed">3/8</span> 
+	  	</p>
+	 
+
+		<h2>SCORE GLOBAL <br></h2> 
+		
+
+		<div class="col-md-6" id="marcador">
+		
+		</div>
+		
+		<div class="col-md-6" id="castigos">
+		
+		</div>
+	</div>
+
+	
+
+
+	<div id="instructions" style="position: relative; margin-left: 274px; top: 35px; display: none;">
+
+
+
+		<div id="controls" style="float: left; display: none;"> 
+			<input type="button" onclick="if (TETRIS.isPaused()) { TETRIS.unPause(); } else { TETRIS.setPause(); }" value="Pause" style="font-size: 150%"><br>
+
+			<p><input type="button" onclick="var i = document.getElementById(&quot;instr&quot;).style; i.display = (i.display==&quot;none&quot;?&quot;inline&quot;:&quot;none&quot;); TETRIS.setPause(); " value="Toggle Instructions"></p>
+		</div>
+		<div id="instr" style="display: none;"> 
+
+			<h1>HTML5 Tetris</h1>
+			<p> Touch events are now supported! Play on iOS and Android: <br>
+				Swipe anywhere to move, tap to rotate (Can also tap while swiping to rotate). Swipe down to drop.
+			</p>
+			<p>
+				Touch Sensitivity:
+				<input id="sens_range" type="range" min="0.2" max="5" step="0.05" value="1" onchange="TETRIS.setTouchSensitivity(this.value); document.getElementById(&quot;sensitivity&quot;).innerHTML = Math.round(this.value*1000)/1000;"> 
+				<span id="sensitivity">1</span>
+			</p>
+
+
+			
+			<p><input type="button" onclick="var result = TETRIS.toggle_touch_draw(); if (result) {this.value = &quot;Turn Touch Debug Off&quot;; } else { this.value=&quot;Turn Touch Debug On&quot;;}" value="Toggle touch debug"></p>
+
+		</div>
+	</div>
+
+
+
+
+</body>
+
+<script type="text/javascript">
+	$('#Popup_nombre').modal({
+	  backdrop: 'static',
+	  keyboard: false
+	});
+
+	$("#Popup_nombre").modal()
+
+
+	// Una vez iniciado el juego vamos a crear la Sesion del usuario
+
+
+</script>
+
+<!-- Este script hace posible usar AJAX en django -->
+<script src="{% static 'ajax_secure_cookie.js'%}"></script>
+
+<script type="text/javascript">
+
+
+	// ALMACENA EL PRIMARY KEY DEL USUARIO
+	var USER_PK = null;
+
+	var TIMER_2_SEC = null;
+
+
+	// Añadimos un listener al boton de enviar nickname
+	$('#crear_sesion').click(function(){
+
+		// Capturamos el valor actual que tiene el input con el nickname
+        var nickname_input = $('#nickname_input').val();
+
+        // Si contiene algo y no es vacío llamamos a la funcion ajax
+        if (nickname_input) {
+            ajax_crear_sesion(nickname_input);
+        }
+
+    });
+
+
+    function get_score() {
+    	// Capturamos el valor de score actual
+    	var current_score = TETRIS.getCurrentScore();
+    	console.log(current_score);
+    	// Llamamos a ajax
+    	ajax_get_score(current_score);
+
+    }
+
+
+	// Funcion ajax que sirve para crear la partida
+	function ajax_crear_sesion(nickname){
+
+            $.ajax({
+                url : "{% url 'index' %}", // the endpoint
+                type : "POST", // http method
+                data : { nickname: nickname},
+
+
+                // El server ha creado correctamente la sesion
+                success : function(json) {
+
+                   	// Como ha tenido exito la creación de Sesion ocultamos el popup
+                    $('#Popup_nombre').modal('hide');
+
+                    // Quitamos pause de la partida para que empieze
+                    TETRIS.unPause();
+
+                    // Añadimos el PK al nuevo usuario
+                    USER_PK = json.user_pk;
+
+                    document.getElementById('nickname').innerHTML = nickname;
+
+
+                    TIMER_2_SEC = window.setInterval(function(){
+					 	get_score();
+					 	ajax_get_castigs();
+					}, 2000);
+                    
+            	},
+
+                error : function(xhr,errmsg,err) {
+                    alert("Hay un problema con tu conexión a internet");
+                    
+                    clearInterval(TIMER_2_SEC);
+                }
+
+            });
+    };
+
+    // Funcion ajax que se ejecuta cada 2000ms para enviar la puntuación actual
+    // y para recibir las puntuaciones de los demas jugadores
+    function ajax_get_score(score_actual){
+
+    	$.ajax({
+            url : "{% url 'get_score' %}", // the endpoint
+            type : "POST", // http method
+            data : {user_pk: USER_PK, score_actual: score_actual},
+
+
+            // El server ha creado correctamente la sesion
+            success : function(json) {
+
+            	document.getElementById("marcador").innerHTML = json.html_scores;
+
+
+            	var user_velocidad = parseInt(json.user_velocidad);
+            	console.log("V: " + user_velocidad)
+            	TETRIS.setTetrisSpeed(user_velocidad);
+                document.getElementById("speed").innerHTML = TETRIS.getTetrisSpeed();
+        	},
+
+            error : function(xhr,errmsg,err) {
+                alert("Hay un problema con tu conexión a internet");
+
+                clearInterval(TIMER_2_SEC);
+
+                
+            }
+
+        });
+
+    };
+    
+
+    function ajax_get_castigs(){
+
+    	$.ajax({
+            url : "{% url 'get_castigs' %}", // the endpoint
+            type : "POST", // http method
+            data : {user_pk: USER_PK},
+
+
+            // El server ha creado correctamente la sesion
+            success : function(json) {
+            	
+
+            	document.getElementById("castigos").innerHTML = json.html_castigos;
+                var nombre = parseInt(json.numero_castigos);
+
+        	},
+
+            error : function(xhr,errmsg,err) {
+                alert("Hay un problema con tu conexión a internet");
+                
+            }
+
+        });
+
+    };
+
+
+    function ajax_new_castig(){
+
+    	$.ajax({
+            url : "{% url 'new_castig' %}", // the endpoint
+            type : "POST", // http method
+            data : {user_pk: USER_PK},
+
+
+            // El server ha creado correctamente la sesion
+            success : function(json) {
+            	
+            
+        	},
+
+            error : function(xhr,errmsg,err) {
+                alert("Hay un problema con tu conexión a internet");
+                
+            }
+
+        });
+
+    };
+
+
+
+</script>
+
+</html>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<p><a class="btn btn-default" href="{% url 'online_tetris_castigo_list' %}">Castigo Listing</a></p>
+<table class="table">
+<tr>
+<td>ID</td><td>Link</td>
+    <td>slug</td>
+    <td>created</td>
+</tr>
+{% for object in object_list %}
+<tr>
+    <td>{{object.pk}}</td>
+    <td><a href="{{object.get_absolute_url}}">{{object}}</a></td>
+    <td>{{ object.slug }}</td>
+    <td>{{ object.created }}</td>
+</tr>
+{% endfor %}
+</table><a class="btn btn-primary" href="{% url 'online_tetris_castigo_create' %}">Create new Castigo</a>
+{% endblock %}

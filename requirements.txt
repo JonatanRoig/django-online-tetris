@@ -1,0 +1,8 @@
+Django==1.10.8
+django-crispy-forms==1.6.1
+django-extensions==1.7.5
+djangorestframework==3.5.3
+simplejson==3.10.0
+gunicorn
+whitenoise
+dj-database-url

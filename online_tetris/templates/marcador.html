@@ -1,0 +1,21 @@
+
+
+<table>
+	<tr>
+		<th>Score</th>
+		<th>Nombre</th>
+		<th>ID</th>
+	</tr>
+
+  	{% for sesion in all_sesions %}
+
+	  	<tr {% if sesion.pk == user_pk %} style="color: blue !important;" {% endif %}>
+	  		<td style="font-size: 12px; font-weight: bold;">{{ sesion.puntos }}</td>
+	  		<td>{{ sesion.nombre }}</td>
+	  		<td>{{ sesion.pk }}</td>
+	  	</tr>
+
+	{% endfor %}
+
+
+</table>
